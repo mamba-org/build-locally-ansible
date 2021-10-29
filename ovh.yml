@@ -1,0 +1,38 @@
+---
+- hosts: localhost
+
+  tasks:
+    - name: Get info
+      synthesio.ovh.public_cloud_instance_info:
+        endpoint: "{{ endpoint }}"
+        application_key: "{{ ovh_app_key }}"
+        application_secret: "{{ ovh_app_secret }}"
+        consumer_key: "{{ ovh_consumer_key }}"
+        service_name: "{{ service_name }}"
+        instance_id: "{{ instance_id }}"
+      delegate_to: localhost
+
+    - name: create ovh_create
+      include_tasks: ovh_create.yml
+      with_items:
+        - ansible-test-atrawog00
+        - ansible-test-atrawog01
+        - ansible-test-atrawog02
+        - ansible-test-atrawog03
+        - ansible-test-atrawog04
+        - ansible-test-atrawog05
+        - ansible-test-atrawog06
+        - ansible-test-atrawog07
+        - ansible-test-atrawog08
+        - ansible-test-atrawog09
+        - ansible-test-atrawog10
+        - ansible-test-atrawog11
+        - ansible-test-atrawog12
+
+- hosts: ovh_instances
+  tasks:
+    - name: Get hostname
+      shell: hostname;ip a
+      
+
+  

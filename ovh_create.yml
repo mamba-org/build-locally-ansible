@@ -1,0 +1,39 @@
+- name: run installation
+  synthesio.ovh.public_cloud_instance:
+    name: "{{ item }}"
+    endpoint: "{{ endpoint }}"
+    application_key: "{{ ovh_app_key }}"
+    application_secret: "{{ ovh_app_secret }}"
+    consumer_key: "{{ ovh_consumer_key }}"
+    ssh_key_id: "{{ ovh_ssh_keyid }}"
+    service_name: "{{ service_name }}"
+    flavor_id: "{{ flavor_id }}"
+    region: "{{ region }}"
+    image_id: "{{ image_id }}"
+  delegate_to: localhost
+  register: instance_metadata
+  retries: 30
+  delay: 10
+  until: instance_metadata["ipAddresses"]
+
+
+ 
+- name: Debug instance_metadata
+  debug:
+    var: instance_metadata
+
+- name: Debug instance_ipAddresses
+  debug:
+    var: instance_metadata["ipAddresses"]
+
+- name: Debug instance_ip
+  debug:
+    var: instance_metadata["ipAddresses"][0]["ip"]
+
+- name: Add host
+  add_host:
+    name: "{{ item }}"
+    groups: ovh_instances
+    host_name: "{{ item }}"
+    ansible_host: "{{ instance_metadata.ipAddresses.0.ip }}"
+    ansible_user: "ubuntu"
