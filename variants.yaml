@@ -1,0 +1,19 @@
+build_variants:
+# DONE
+# - linux_64_cuda_compiler_version10.2cudnn7python3.7.____cpython
+# - linux_64_cuda_compiler_version10.2cudnn7python3.8.____cpython
+# - linux_64_cuda_compiler_version10.2cudnn7python3.9.____cpython
+# - linux_64_cuda_compiler_version11.0cudnn8python3.7.____cpython
+# - linux_64_cuda_compiler_version11.0cudnn8python3.8.____cpython
+# - linux_64_cuda_compiler_version11.0cudnn8python3.9.____cpython
+#TODO
+- linux_64_cuda_compiler_version11.2cudnn8python3.7.____cpython
+- linux_64_cuda_compiler_version11.2cudnn8python3.8.____cpython
+- linux_64_cuda_compiler_versionNonecudnnundefinedpython3.7.____cpython
+- linux_64_cuda_compiler_versionNonecudnnundefinedpython3.8.____cpython
+- linux_64_cuda_compiler_versionNonecudnnundefinedpython3.9.____cpython
+- linux_64_cuda_compiler_version11.1cudnn8python3.7.____cpython
+- linux_64_cuda_compiler_version11.1cudnn8python3.8.____cpython
+- linux_64_cuda_compiler_version11.1cudnn8python3.9.____cpython
+## DONE ##
+# - linux_64_cuda_compiler_version11.2cudnn8python3.9.____cpython
