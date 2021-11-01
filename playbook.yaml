@@ -1,0 +1,85 @@
+- name: Secrets, Networks, Static Routes
+  hosts: localhost
+  serial: 1
+  connection: local
+  tasks:
+  - name: Get info
+    synthesio.ovh.public_cloud_instance_info:
+      endpoint: "ovh-eu"
+      application_key: "{{ ovh_app_key }}"
+      application_secret: "{{ ovh_app_secret }}"
+      consumer_key: "{{ ovh_consumer_key }}"
+      service_name: "da651592c8a84c5ca1cf83deb28c741c"
+      instance_id: "c7a51e4f-dfd8-455b-a4ab-f4017fb49069"
+    delegate_to: localhost
+
+  - name: start one server per variant
+    include_tasks: startovh.yml
+    loop: "{{ build_variants }}"
+
+- name: run install
+  hosts: launched
+  strategy: free
+  tasks:
+  # IP address of service is instance_metadata.ipAddresses[0]
+  - name: run hostname
+    ansible.builtin.shell: |
+      echo `hostname`
+    retries: 5
+    delay: 15
+
+  - import_role:
+      name: mamba
+
+  - import_role:
+      name: docker
+
+- name: build feedstock
+  hosts: launched
+  strategy: free
+  tasks:
+
+  - command: docker run hello-world
+    retries: 3
+    delay: 10
+    register: docker_is_running
+    until: docker_is_running.rc == 0
+
+  - name: build_feedstock
+    ansible.builtin.shell: |
+      cat > script1.sh <<EOL
+        echo "{{ github_token }}" | gh auth login --with-token
+        gh repo clone conda-forge/tensorflow-feedstock feedstock
+        pushd feedstock
+        gh pr checkout 157
+      EOL
+      /bin/bash -l -i script1.sh
+
+  - name: run build
+    ansible.builtin.shell: |
+      VARIANT="{{ build_variant }}"  # from host
+      cat > buildscript.sh <<- EOL
+      pushd feedstock
+      echo "BUILDING VARIANT: $VARIANT"
+      ./build-locally.py $VARIANT 2>&1 | tee ~/$VARIANT.log
+
+      cd ~/feedstock/build_artifacts/linux-64
+
+      printf "\n\n===SHA 256 SUMS===\n\n" >> ~/$VARIANT.log
+      sha256sum *.tar.bz2 >> ~/$VARIANT.log
+
+      gh gist create ~/$VARIANT.log
+
+      export AWS_ACCESS_KEY_ID={{ aws_key_id }}
+      export AWS_SECRET_ACCESS_KEY={{ aws_secret_key }}
+      export AWS_DEFAULT_REGION=eu-central-1
+
+      for f in *.tar.bz2; do
+        echo "Uploading \$f file"; 
+        aws s3api put-object --bucket {{ aws_bucket }} --key tensorflow-2/$VARIANT/\$f --body \$f
+      done
+      aws s3api put-object --bucket conda-uploads --key tensorflow-2/$VARIANT/$VARIANT.log --body ~/$VARIANT.log
+      EOL
+
+      chmod u+x ./buildscript.sh
+      tmux new-session -d -s my_session "/bin/bash -l -i buildscript.sh"
