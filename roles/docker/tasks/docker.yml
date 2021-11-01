@@ -1,0 +1,40 @@
+- name: Add Docker GPG key
+  become: yes
+  apt_key:
+    url: "{{ docker_apt_gpg_key }}"
+    state: present
+
+- name: Add Docker repository
+  become: yes
+  apt_repository:
+    repo: "{{ docker_apt_repository }}"
+    state: present
+    update_cache: true
+
+- name: Install docker-ce
+  become: yes
+  apt:
+    update_cache: no 
+    name: docker-ce
+    state: present
+
+- name: Enable docker
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Add Ansible user to docker group
+  become: yes
+  user:
+    name: "{{ansible_user}}"
+    groups: docker
+
+- name: reset ssh connection to allow user changes to affect 'current login user'
+  meta: reset_connection
+
+# - name: Install Python tools
+#   pip:
+#     name:
+#       - docker-compose
+

@@ -1,0 +1,40 @@
+- name: Install micromamba
+  become: yes
+  shell: curl -L https://micro.mamba.pm/api/micromamba/linux-64/latest |  tar -xj -C /usr/local
+
+- name: Create symlinks
+  become: yes
+  file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+  with_items:
+    - { src: '/usr/local/bin/micromamba', dest: '/usr/local/bin/mamba' }
+    - { src: '/usr/local/bin/micromamba', dest: '/usr/local/bin/conda' }
+    - { src: '/usr/local/bin/micromamba', dest: '/usr/local/bin/miniconda' } 
+
+- name: Create MAMBA_ROOT_PREFIX
+  become: yes
+  file: 
+    path: "{{ MAMBA_ROOT_PREFIX }}"
+    owner: "{{ ansible_user }}"
+    state: directory
+    recurse: yes
+
+- name: Activate Micromamba
+  shell: /usr/local/bin/micromamba shell init -s bash -p {{MAMBA_ROOT_PREFIX}} && echo "micromamba activate base" >> ~/.bashrc
+
+- name: Install Micromamba Python
+  shell: /usr/local/bin/micromamba install -v -y -n base -c conda-forge "python>=3.7 h2<4.0.0"
+  environment:
+    MAMBA_ROOT_PREFIX: "{{MAMBA_ROOT_PREFIX}}"
+    LANG: en_US.UTF-8
+    PATH: "/opt/conda/bin:{{ ansible_env.PATH }}"
+
+- name: Install Micromamba packages
+  shell: /usr/local/bin/micromamba install -v -y -n base -c conda-forge "{{ item }}"
+  environment:
+    MAMBA_ROOT_PREFIX: "{{MAMBA_ROOT_PREFIX}}"
+    LANG: en_US.UTF-8
+    PATH: "/opt/conda/bin:{{ ansible_env.PATH }}"
+  loop: "{{ pkgs }}"

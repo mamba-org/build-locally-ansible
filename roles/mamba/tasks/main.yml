@@ -1,0 +1,3 @@
+- name: Configure mamba
+  import_tasks: mamba.yml
+  tags: mamba

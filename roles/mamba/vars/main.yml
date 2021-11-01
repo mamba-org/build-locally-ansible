@@ -1,0 +1,5 @@
+MAMBA_ROOT_PREFIX: /opt/conda
+pkgs:
+  - python 3.9
+  - gh
+  - awscli
