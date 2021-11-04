@@ -1,0 +1,90 @@
+---
+- hosts: localhost
+  tasks:
+    - name: OVH create instance 
+      include_tasks: ovh_instance_create.yml
+      with_items: "{{ ovh_instances }}"
+
+- hosts: ovh_instances
+  gather_facts: no
+  tasks:
+    - name: Wait for connection
+      wait_for_connection:
+        delay: 10
+        timeout: 300
+
+- hosts: ovh_instances
+  become: yes
+  roles:
+      - geerlingguy.docker
+      - maresb.micromamba
+  vars:
+    dest: "{{ mamba_exe }}"
+
+- hosts: ovh_instances
+  roles:
+      - maresb.micromamba
+  vars:
+    dest: "{{ mamba_exe }}"
+    root_prefix: "{{ mamba_root_prefix }}"
+    root_prefix_condarc:
+      channels:
+        - conda-forge
+    packages:
+      - python
+      - gh
+      - awscli
+
+- hosts: ovh_instances
+  tasks:
+  - name: Add Ansible user to docker group
+    become: yes
+    user:
+      name: "{{ansible_user}}"
+      groups: docker
+  
+  - name: Update .bashrc
+    template:
+      src: templates/bashrc.j2
+      dest: ~/.bashrc
+
+  - name: Reload Bash configuration
+    meta: reset_connection
+
+  - name: Copy feedstock_checkout
+    template:
+      src: templates/feedstock_checkout.j2
+      dest: ~/feedstock_checkout.sh
+      mode: u=rwx,g=rx,o=rx
+
+  - name: Copy feedstock_build
+    template:
+      src: templates/feedstock_build.j2
+      dest: ~/feedstock_build.sh
+      mode: u=rwx,g=rx,o=rx
+
+  - name: Run feedstock_checkout
+    shell: ~/feedstock_checkout.sh
+    environment:
+      GH_TOKEN: "{{ gh_token }}"
+      GH_REPO: "{{ gh_repo }}"
+      GH_PR:  "{{ gh_pr}}"
+    vars:
+      gh_repo: "conda-forge/tensorflow-feedstock"
+      gh_pr: ""
+
+  - name: Run feedstock_build
+    shell: tmux new-session -d -s builder "/bin/bash -l -i ~/feedstock_build.sh"
+    environment:
+      VARIANT: "{{ build_variant }}"
+      AWS_ACCESS_KEY_ID: "{{ aws_key_id }}"
+      AWS_SECRET_ACCESS_KEY: "{{ aws_secret_key }}"
+      AWS_DEFAULT_REGION:  "{{aws_default_region}}"
+    vars:
+      build_variant: linux_64_cuda_compiler_version11.2cudnn8python3.9.____cpython
+      aws_default_region: "eu-central-1"
+
+
+
+
+

@@ -1,0 +1,2 @@
+mamba_exe: /usr/local/bin/micromamba
+mamba_root_prefix: ~/micromamba

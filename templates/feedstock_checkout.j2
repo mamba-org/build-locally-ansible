@@ -1,0 +1,14 @@
+#!/bin/bash
+TOKEN=$GH_TOKEN
+unset GH_TOKEN
+unset GITHUB_TOKEN
+echo GitHub login
+echo $TOKEN | gh auth login --with-token
+rm -rf feedstock
+echo GitHub checkout $GH_REPO
+gh repo clone $GH_REPO feedstock
+pushd feedstock
+if [ -n "$GH_PR" ]; then
+echo GitHub pr checkout $GH_PR
+gh pr checkout $GH_PR
+fi

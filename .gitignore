@@ -1,2 +1,4 @@
-.vagrant/
+# Secrets
 .vault_pass.txt
+group_vars/all/secrets.yaml
+

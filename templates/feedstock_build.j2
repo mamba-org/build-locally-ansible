@@ -1,0 +1,19 @@
+#!/bin/bash
+pushd feedstock
+echo "BUILDING VARIANT: $VARIANT"
+./build-locally.py $VARIANT 2>&1 | tee ~/feedstock.log
+cd ~/feedstock/build_artifacts/linux-64
+printf "\n\n===SHA 256 SUMS===\n\n" >> ~/feedstock.log
+sha256sum *.tar.bz2 >> ~/feedstock.log
+gh gist create ~/feedstock.log
+
+cd ~/feedstock/build_artifacts/linux-64
+printf "\n\n===SHA 256 SUMS===\n\n" >> ~/feedstock.log
+sha256sum *.tar.bz2 >> ~/feedstock.log
+gh gist create ~/feedstock.log
+
+for f in *.tar.bz2; do
+echo "Uploading \$f file"; 
+aws s3api put-object --bucket {{ aws_bucket }} --key tensorflow-2/$VARIANT/\$f --body \$f
+done
+aws s3api put-object --bucket conda-uploads --key tensorflow-2/$VARIANT/$VARIANT.log --body ~/feedstock.log
