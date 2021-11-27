@@ -4,7 +4,7 @@
 mamba create -n ansible boto3 ansible && mamba activate ansible
 pip install ovh
 ansible-galaxy collection install git+https://github.com/dorgeln/infra-ovh-ansible-module
-ansible-galaxy install maresb.micromamba
+ansible-galaxy install mambaorg.micromamba
 ansible-galaxy install geerlingguy.docker
 ```
 
