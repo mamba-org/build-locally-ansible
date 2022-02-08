@@ -17,13 +17,13 @@
   become: yes
   roles:
       - geerlingguy.docker
-      - maresb.micromamba
+      - mambaorg.micromamba
   vars:
     dest: "{{ mamba_exe }}"
 
 - hosts: ovh_instances
   roles:
-      - maresb.micromamba
+      - mambaorg.micromamba
   vars:
     dest: "{{ mamba_exe }}"
     root_prefix: "{{ mamba_root_prefix }}"
